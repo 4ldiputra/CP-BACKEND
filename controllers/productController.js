@@ -1406,10 +1406,23 @@ class ProductController {
         p.status_pelunasan,
         p.payment_date,
         u.name AS user_name,
-        o.total_price AS total_harga  -- ✅ AMBIL TOTAL HARGA DARI TABEL ORDERS
+        o.total_price AS total_harga,
+        -- Ambil alamat pengiriman dari tabel user_addresses
+        ua.full_address,
+        c.name AS city,          -- Ambil nama kota dari tabel cities
+        pr.name AS province,     -- Ambil nama provinsi dari tabel provinces
+        ua.postal_code,
+        ua.phone AS address_phone,
+        ua.name AS address_name
       FROM payments p
       JOIN orders o ON p.order_id = o.id
       JOIN users u ON o.user_id = u.id
+      -- Gabungkan dengan tabel user_addresses untuk mendapatkan alamat
+      LEFT JOIN user_addresses ua ON o.user_id = ua.user_id AND ua.is_default = 1
+      -- Gabungkan dengan tabel cities untuk mendapatkan nama kota
+      LEFT JOIN cities c ON ua.city_id = c.id
+      -- Gabungkan dengan tabel provinces untuk mendapatkan nama provinsi
+      LEFT JOIN provinces pr ON ua.province_id = pr.id
       ORDER BY p.id DESC
     `;
       const payments = await new Promise((resolve, reject) => {
@@ -1429,7 +1442,18 @@ class ProductController {
         payment_id: row.payment_id,
         order_id: row.order_id,
         user_name: row.user_name,
-        total_harga: row.total_harga, // ✅ Sudah dari database, tidak perlu hitung ulang
+        total_harga: row.total_harga,
+        // Format alamat menjadi objek
+        address: row.full_address
+          ? {
+              name: row.address_name || row.user_name, // Gunakan nama user jika nama alamat kosong
+              phone: row.address_phone || "-",
+              full_address: row.full_address || "-",
+              city: row.city || "-", // Ambil dari hasil JOIN ke cities
+              province: row.province || "-", // Ambil dari hasil JOIN ke provinces
+              postal_code: row.postal_code || "-",
+            }
+          : null,
         bukti_dp:
           row.payment_type === "dp1" ? fixImagePath(row.proof_image) : null,
         status_dp: row.payment_type === "dp1" ? row.status_dp : "",
