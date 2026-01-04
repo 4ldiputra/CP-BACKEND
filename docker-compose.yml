@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./:/usr/src/app:delegated
+      - /usr/src/app/node_modules
+    command: sh -c "node scripts/wait-for-db.js && npm run dev"
+    environment:
+      - NODE_ENV=development
+      - MYSQL_HOST=db
+    restart: unless-stopped
+
+  db:
+    image: mysql:9.5.0
+    env_file:
+      - .env
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+    volumes:
+      - db_volume:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  db_volume:
