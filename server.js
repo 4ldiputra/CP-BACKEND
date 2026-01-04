@@ -52,8 +52,23 @@ const sessionStore = new MySQLStore({
 
 
 
+const allowedOrigins = [
+  'http://localhost:5173', // Vite dev
+  'http://127.0.0.1:5173',
+  'https://mayuna.store',
+  'https://www.mayuna.store',
+  'https://api.mayuna.store'
+];
 const corsOptions = {
-  origin: 'http://localhost:5173', // Port Vite default
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true // ⭐ WAJIB untuk session cookie
 };
 app.use(cors(corsOptions));
