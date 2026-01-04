@@ -1,0 +1,17 @@
+FROM node:24.1-slim AS base
+WORKDIR /usr/src/app
+
+# Install dependencies (production only)
+FROM base AS deps
+COPY package*.json ./
+RUN npm install --production --silent --no-audit --no-fund
+
+# Build final image
+FROM base AS final
+ENV NODE_ENV=production
+
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY . .
+
+EXPOSE 5000
+CMD ["npm", "run", "start"]

@@ -1,0 +1,38 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    env_file:
+      - .env
+    ports:
+      - '5000:5000'
+    command: sh -c "node scripts/wait-for-db.js && npm start"
+    environment:
+      - NODE_ENV=production
+      - MYSQL_HOST=db
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mysql:9.5.0
+    env_file:
+      - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+    volumes:
+      - db_volume:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -P 3306 --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  db_volume:
