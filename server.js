@@ -17,6 +17,7 @@ const db = require('./config/database');
 
 const app = express();
 
+app.set('trust proxy', 1);
 
 const uploadsProfile = path.join(__dirname, 'uploads/profiles');
 if (!fs.existsSync(uploadsProfile)) {
