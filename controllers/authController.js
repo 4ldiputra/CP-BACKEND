@@ -70,9 +70,18 @@ class AuthController {
       req.session.userId = newUser.id;
       req.session.role_id = newUser.role_id;
 
-      res
-        .status(201)
-        .json({ success: true, message: "User registered", data: newUser });
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error (register):', err);
+            return reject(err);
+          }
+          console.log('Session saved (register):', req.sessionID);
+          resolve();
+        });
+      });
+
+      res.status(201).json({ success: true, message: "User registered", data: newUser });
     } catch (error) {
       console.error("Register error:", error);
       res.status(500).json({ success: false, message: "Server error" });
@@ -102,6 +111,17 @@ class AuthController {
 
       req.session.userId = user.id;
       req.session.role_id = user.role_id;
+
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error (login):', err);
+            return reject(err);
+          }
+          console.log('Session saved (login):', req.sessionID);
+          resolve();
+        });
+      });
 
       const fullData = await User.findById(user.id);
 
