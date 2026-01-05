@@ -6,12 +6,12 @@ class CartController {
   // =========================
   static async getCart(req, res) {
     try {
-      const userId = req.headers.user_id;
+      const userId = req.session && req.session.userId;
 
       if (!userId) {
-        return res.status(400).json({
+        return res.status(401).json({
           success: false,
-          message: "user_id is required in headers",
+          message: 'Authentication required',
         });
       }
 
@@ -96,12 +96,12 @@ class CartController {
   // =========================
   static async getCartCount(req, res) {
     try {
-      const userId = req.headers.user_id;
+      const userId = req.session && req.session.userId;
 
       if (!userId) {
-        return res.status(400).json({
+        return res.status(401).json({
           success: false,
-          message: "user_id is required in headers",
+          message: 'Authentication required',
         });
       }
 
@@ -136,13 +136,20 @@ class CartController {
   // =========================
   static async addToCart(req, res) {
     try {
-      const userId = req.headers.user_id;
+      const userId = req.session && req.session.userId;
       const { product_id, quantity } = req.body;
 
-      if (!userId || !product_id || !quantity) {
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message:
+          'Authentication required',
+        });
+      }
+      if (!product_id || !quantity) {
         return res.status(400).json({
           success: false,
-          message: "user_id, product_id and quantity are required",
+          message: 'product_id and quantity are required',
         });
       }
 
@@ -226,14 +233,21 @@ class CartController {
   // =========================
   static async updateCartItem(req, res) {
     try {
-      const userId = req.headers.user_id;
+      const userId = req.session && req.session.userId;
       const cartId = req.params.id;
       const { quantity } = req.body;
 
-      if (!userId || !quantity) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid request" });
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required',
+        });
+      }
+      if (!quantity) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid request',
+        });
       }
 
       db.query(
@@ -265,8 +279,15 @@ class CartController {
   // =========================
   static async removeCartItem(req, res) {
     try {
-      const userId = req.headers.user_id;
+      const userId = req.session && req.session.userId;
       const cartId = req.params.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required',
+        });
+      }
 
       db.query(
         "DELETE FROM carts WHERE id = ? AND user_id = ?",
